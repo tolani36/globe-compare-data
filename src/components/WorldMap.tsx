@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, GeoJSON, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
+import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -38,16 +39,40 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-const CountryLayer: React.FC<{ 
-  countries: Country[]; 
-  onCountrySelect: (country: Country) => void;
-  selectedCountry: Country | null;
-}> = ({ countries, onCountrySelect, selectedCountry }) => {
-  const [geoData, setGeoData] = useState<any>(null);
-  
+const MapController: React.FC<{ selectedCountry: Country | null }> = ({ selectedCountry }) => {
+  const map = useMap();
+
   useEffect(() => {
-    // Fetch world countries GeoJSON data from a reliable source
-    fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
+    if (selectedCountry && selectedCountry.latlng && map) {
+      map.setView([selectedCountry.latlng[0], selectedCountry.latlng[1]], 5);
+    }
+  }, [selectedCountry, map]);
+
+  return null;
+};
+
+const WorldMap: React.FC<WorldMapProps> = ({ onCountrySelect, selectedCountry }) => {
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [geoData, setGeoData] = useState<any>(null);
+
+  // Fetch countries data
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const response = await fetch('https://restcountries.com/v3.1/all');
+        const data = await response.json();
+        setCountries(data);
+      } catch (error) {
+        console.error('Error fetching countries:', error);
+      }
+    };
+
+    fetchCountries();
+  }, []);
+
+  // Fetch GeoJSON data
+  useEffect(() => {
+    fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson')
       .then(response => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -60,16 +85,16 @@ const CountryLayer: React.FC<{
       })
       .catch(error => {
         console.error('Error fetching GeoJSON:', error);
-        // Fallback to a simpler world map
-        fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
-          .then(response => response.json())
-          .then(data => setGeoData(data))
-          .catch(fallbackError => console.error('Fallback GeoJSON also failed:', fallbackError));
       });
   }, []);
 
   const getCountryStyle = (feature: any) => {
-    const isSelected = selectedCountry?.name.common === feature.properties.NAME;
+    const isSelected = selectedCountry && (
+      selectedCountry.name.common === feature.properties.NAME ||
+      selectedCountry.name.common === feature.properties.ADMIN ||
+      selectedCountry.name.common === feature.properties.NAME_EN
+    );
+    
     return {
       fillColor: isSelected ? '#3b82f6' : '#e2e8f0',
       weight: isSelected ? 2 : 1,
@@ -94,16 +119,12 @@ const CountryLayer: React.FC<{
         layer.setStyle(getCountryStyle(feature));
       },
       click: () => {
-        // Try different property names as they vary between GeoJSON sources
         const countryName = feature.properties.NAME || 
                            feature.properties.NAME_EN || 
                            feature.properties.ADMIN ||
-                           feature.properties.name ||
-                           feature.properties.country;
+                           feature.properties.name;
         
-        console.log('Clicked country:', countryName, 'Available properties:', Object.keys(feature.properties));
-        
-        if (countryName) {
+        if (countryName && countries.length > 0) {
           const matchedCountry = countries.find(c => 
             c.name.common.toLowerCase().includes(countryName.toLowerCase()) ||
             countryName.toLowerCase().includes(c.name.common.toLowerCase()) ||
@@ -111,56 +132,12 @@ const CountryLayer: React.FC<{
           );
           
           if (matchedCountry) {
-            console.log('Found matching country:', matchedCountry.name.common);
             onCountrySelect(matchedCountry);
-          } else {
-            console.log('No matching country found for:', countryName);
           }
         }
       }
     });
   };
-
-  if (!geoData) return null;
-
-  return (
-    <GeoJSON 
-      data={geoData} 
-      style={getCountryStyle}
-      onEachFeature={onEachFeature}
-    />
-  );
-};
-
-const MapEvents: React.FC<{ selectedCountry: Country | null }> = ({ selectedCountry }) => {
-  const map = useMapEvents({});
-
-  useEffect(() => {
-    if (selectedCountry && selectedCountry.latlng) {
-      map.setView([selectedCountry.latlng[0], selectedCountry.latlng[1]], 5);
-    }
-  }, [selectedCountry, map]);
-
-  return null;
-};
-
-const WorldMap: React.FC<WorldMapProps> = ({ onCountrySelect, selectedCountry }) => {
-  const [countries, setCountries] = useState<Country[]>([]);
-
-  // Fetch countries data
-  useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const response = await fetch('https://restcountries.com/v3.1/all');
-        const data = await response.json();
-        setCountries(data);
-      } catch (error) {
-        console.error('Error fetching countries:', error);
-      }
-    };
-
-    fetchCountries();
-  }, []);
 
   return (
     <div className="flex-1 relative">
@@ -176,12 +153,15 @@ const WorldMap: React.FC<WorldMapProps> = ({ onCountrySelect, selectedCountry })
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <CountryLayer 
-          countries={countries}
-          onCountrySelect={onCountrySelect}
-          selectedCountry={selectedCountry}
-        />
-        <MapEvents selectedCountry={selectedCountry} />
+        {geoData && (
+          <GeoJSON 
+            key={selectedCountry?.cca3 || 'default'}
+            data={geoData} 
+            style={getCountryStyle}
+            onEachFeature={onEachFeature}
+          />
+        )}
+        <MapController selectedCountry={selectedCountry} />
       </MapContainer>
       
       {selectedCountry && (
