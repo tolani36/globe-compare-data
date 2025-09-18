@@ -46,11 +46,26 @@ const CountryLayer: React.FC<{
   const [geoData, setGeoData] = useState<any>(null);
   
   useEffect(() => {
-    // Fetch world countries GeoJSON data
-    fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson')
-      .then(response => response.json())
-      .then(data => setGeoData(data))
-      .catch(error => console.error('Error fetching GeoJSON:', error));
+    // Fetch world countries GeoJSON data from a reliable source
+    fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('GeoJSON data loaded successfully');
+        setGeoData(data);
+      })
+      .catch(error => {
+        console.error('Error fetching GeoJSON:', error);
+        // Fallback to a simpler world map
+        fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson')
+          .then(response => response.json())
+          .then(data => setGeoData(data))
+          .catch(fallbackError => console.error('Fallback GeoJSON also failed:', fallbackError));
+      });
   }, []);
 
   const getCountryStyle = (feature: any) => {
@@ -79,15 +94,28 @@ const CountryLayer: React.FC<{
         layer.setStyle(getCountryStyle(feature));
       },
       click: () => {
-        const countryName = feature.properties.NAME;
-        const matchedCountry = countries.find(c => 
-          c.name.common.toLowerCase().includes(countryName.toLowerCase()) ||
-          countryName.toLowerCase().includes(c.name.common.toLowerCase()) ||
-          c.name.official.toLowerCase().includes(countryName.toLowerCase())
-        );
+        // Try different property names as they vary between GeoJSON sources
+        const countryName = feature.properties.NAME || 
+                           feature.properties.NAME_EN || 
+                           feature.properties.ADMIN ||
+                           feature.properties.name ||
+                           feature.properties.country;
         
-        if (matchedCountry) {
-          onCountrySelect(matchedCountry);
+        console.log('Clicked country:', countryName, 'Available properties:', Object.keys(feature.properties));
+        
+        if (countryName) {
+          const matchedCountry = countries.find(c => 
+            c.name.common.toLowerCase().includes(countryName.toLowerCase()) ||
+            countryName.toLowerCase().includes(c.name.common.toLowerCase()) ||
+            c.name.official.toLowerCase().includes(countryName.toLowerCase())
+          );
+          
+          if (matchedCountry) {
+            console.log('Found matching country:', matchedCountry.name.common);
+            onCountrySelect(matchedCountry);
+          } else {
+            console.log('No matching country found for:', countryName);
+          }
         }
       }
     });
