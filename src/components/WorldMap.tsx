@@ -1,6 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
-import { useMap } from 'react-leaflet';
+import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -31,29 +29,11 @@ interface WorldMapProps {
   selectedCountry: Country | null;
 }
 
-// Fix Leaflet default marker icons
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
-
-const MapController: React.FC<{ selectedCountry: Country | null }> = ({ selectedCountry }) => {
-  const map = useMap();
-
-  useEffect(() => {
-    if (selectedCountry && selectedCountry.latlng && map) {
-      map.setView([selectedCountry.latlng[0], selectedCountry.latlng[1]], 5);
-    }
-  }, [selectedCountry, map]);
-
-  return null;
-};
-
 const WorldMap: React.FC<WorldMapProps> = ({ onCountrySelect, selectedCountry }) => {
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const geoLayerRef = useRef<L.GeoJSON<any> | null>(null);
   const [countries, setCountries] = useState<Country[]>([]);
-  const [geoData, setGeoData] = useState<any>(null);
 
   // Fetch countries data
   useEffect(() => {
@@ -70,113 +50,146 @@ const WorldMap: React.FC<WorldMapProps> = ({ onCountrySelect, selectedCountry })
     fetchCountries();
   }, []);
 
-  // Fetch GeoJSON data
+  // Initialize Leaflet map once
   useEffect(() => {
-    fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('GeoJSON data loaded successfully');
-        setGeoData(data);
-      })
-      .catch(error => {
-        console.error('Error fetching GeoJSON:', error);
-      });
+    if (mapRef.current || !mapContainerRef.current) return;
+
+    const map = L.map(mapContainerRef.current, {
+      center: [20, 0],
+      zoom: 2,
+      worldCopyJump: true,
+      zoomControl: true,
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    }).addTo(map);
+
+    mapRef.current = map;
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
   }, []);
 
-  const getCountryStyle = (feature: any) => {
-    const isSelected = selectedCountry && (
-      selectedCountry.name.common === feature.properties.NAME ||
-      selectedCountry.name.common === feature.properties.ADMIN ||
-      selectedCountry.name.common === feature.properties.NAME_EN
-    );
-    
-    return {
-      fillColor: isSelected ? '#3b82f6' : '#e2e8f0',
-      weight: isSelected ? 2 : 1,
-      opacity: 1,
-      color: isSelected ? '#1d4ed8' : '#94a3b8',
-      fillOpacity: isSelected ? 0.7 : 0.5
-    };
-  };
+  // Load GeoJSON and wire interactions
+  useEffect(() => {
+    if (!mapRef.current) return;
 
-  const onEachFeature = (feature: any, layer: any) => {
-    layer.on({
-      mouseover: (e: any) => {
-        const layer = e.target;
-        layer.setStyle({
-          weight: 3,
-          color: '#1d4ed8',
-          fillOpacity: 0.7
+    // If an existing layer exists, remove it before adding a new one
+    if (geoLayerRef.current) {
+      geoLayerRef.current.remove();
+      geoLayerRef.current = null;
+    }
+
+    const fetchGeo = async () => {
+      try {
+        // Use Natural Earth 1:50m admin boundaries (solid & reliable)
+        const res = await fetch(
+          'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson'
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const geo = await res.json();
+
+        const layer = L.geoJSON(geo, {
+          style: (feature: any) => getCountryStyle(feature, selectedCountry),
+          onEachFeature: (feature: any, layer: L.Layer) => {
+            layer.on('mouseover', (e: any) => {
+              const target = e.target as L.Path;
+              target.setStyle({ weight: 2, color: '#1d4ed8', fillOpacity: 0.7 });
+              if (!(target as any).bringToFront) return;
+              (target as any).bringToFront();
+            });
+            layer.on('mouseout', (e: any) => {
+              const target = e.target as L.Path;
+              target.setStyle(getCountryStyle(feature, selectedCountry) as any);
+            });
+            layer.on('click', () => {
+              const countryName =
+                feature.properties?.NAME ||
+                feature.properties?.ADMIN ||
+                feature.properties?.NAME_EN ||
+                feature.properties?.name;
+
+              if (countryName && countries.length > 0) {
+                const matched = countries.find((c) =>
+                  [c.name.common, c.name.official]
+                    .filter(Boolean)
+                    .some((n) =>
+                      n.toLowerCase() === countryName.toLowerCase() ||
+                      countryName.toLowerCase().includes(n.toLowerCase()) ||
+                      n.toLowerCase().includes(countryName.toLowerCase())
+                    )
+                );
+
+                if (matched) {
+                  onCountrySelect(matched);
+                  if (matched.latlng) {
+                    mapRef.current?.setView([matched.latlng[0], matched.latlng[1]], 5);
+                  }
+                }
+              }
+            });
+          },
         });
-      },
-      mouseout: (e: any) => {
-        const layer = e.target;
-        layer.setStyle(getCountryStyle(feature));
-      },
-      click: () => {
-        const countryName = feature.properties.NAME || 
-                           feature.properties.NAME_EN || 
-                           feature.properties.ADMIN ||
-                           feature.properties.name;
-        
-        if (countryName && countries.length > 0) {
-          const matchedCountry = countries.find(c => 
-            c.name.common.toLowerCase().includes(countryName.toLowerCase()) ||
-            countryName.toLowerCase().includes(c.name.common.toLowerCase()) ||
-            c.name.official.toLowerCase().includes(countryName.toLowerCase())
-          );
-          
-          if (matchedCountry) {
-            onCountrySelect(matchedCountry);
-          }
-        }
+
+        layer.addTo(mapRef.current!);
+        geoLayerRef.current = layer;
+      } catch (err) {
+        console.error('Error fetching GeoJSON:', err);
       }
-    });
-  };
+    };
+
+    fetchGeo();
+  }, [countries, selectedCountry]);
+
+  // Update view when selectedCountry changes
+  useEffect(() => {
+    if (selectedCountry?.latlng && mapRef.current) {
+      mapRef.current.setView([selectedCountry.latlng[0], selectedCountry.latlng[1]], 5);
+    }
+  }, [selectedCountry]);
 
   return (
     <div className="flex-1 relative">
-      <MapContainer
-        center={[20, 0]}
-        zoom={2}
-        className="absolute inset-0 rounded-lg"
-        style={{ height: '100%', width: '100%' }}
-        scrollWheelZoom={true}
-        zoomControl={true}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {geoData && (
-          <GeoJSON 
-            key={selectedCountry?.cca3 || 'default'}
-            data={geoData} 
-            style={getCountryStyle}
-            onEachFeature={onEachFeature}
-          />
-        )}
-        <MapController selectedCountry={selectedCountry} />
-      </MapContainer>
-      
+      <div ref={mapContainerRef} className="absolute inset-0 rounded-lg" />
       {selectedCountry && (
         <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg p-3 shadow-soft max-w-xs z-[1000]">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-2xl">{selectedCountry.flag}</span>
             <span className="font-semibold text-sm">{selectedCountry.name.common}</span>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Click for detailed information
-          </p>
+          <p className="text-xs text-muted-foreground">Click for detailed information</p>
         </div>
       )}
     </div>
   );
 };
+
+function getCountryStyle(feature: any, selectedCountry: Country | null) {
+  const fname =
+    feature?.properties?.NAME ||
+    feature?.properties?.ADMIN ||
+    feature?.properties?.NAME_EN ||
+    feature?.properties?.name;
+
+  const isSelected = !!(
+    selectedCountry &&
+    fname &&
+    [selectedCountry.name.common, selectedCountry.name.official]
+      .filter(Boolean)
+      .some((n) => n.toLowerCase() === String(fname).toLowerCase())
+  );
+
+  return {
+    fillColor: isSelected ? '#3b82f6' : '#e2e8f0',
+    weight: isSelected ? 1.5 : 1,
+    opacity: 1,
+    color: isSelected ? '#1d4ed8' : '#94a3b8',
+    fillOpacity: isSelected ? 0.65 : 0.5,
+  } as L.PathOptions;
+}
 
 export default WorldMap;
