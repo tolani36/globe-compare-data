@@ -70,6 +70,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ countries, onCountrySelect, onSea
     onSearch('');
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && suggestions.length > 0) {
+      handleSelect(suggestions[0]);
+    }
+  };
+
   return (
     <div className="relative">
       <div className="relative">
@@ -79,6 +85,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ countries, onCountrySelect, onSea
           placeholder="Search countries, capitals, or regions..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
           className="pl-10 pr-10"
           onFocus={() => query && setShowSuggestions(true)}
         />
