@@ -36,7 +36,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ countries, onCountrySelect, onSea
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
-    if (query.trim().length > 0) {
+    if (query.trim().length > 0 && Array.isArray(countries)) {
       const filtered = countries
         .filter(country => 
           country.name.common.toLowerCase().includes(query.toLowerCase()) ||
