@@ -1,9 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { MapPin } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { MapContainer, TileLayer, GeoJSON, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 interface Country {
   name: {
@@ -32,11 +30,93 @@ interface WorldMapProps {
   selectedCountry: Country | null;
 }
 
+// Fix Leaflet default marker icons
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+const CountryLayer: React.FC<{ 
+  countries: Country[]; 
+  onCountrySelect: (country: Country) => void;
+  selectedCountry: Country | null;
+}> = ({ countries, onCountrySelect, selectedCountry }) => {
+  const [geoData, setGeoData] = useState<any>(null);
+  
+  useEffect(() => {
+    // Fetch world countries GeoJSON data
+    fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson')
+      .then(response => response.json())
+      .then(data => setGeoData(data))
+      .catch(error => console.error('Error fetching GeoJSON:', error));
+  }, []);
+
+  const getCountryStyle = (feature: any) => {
+    const isSelected = selectedCountry?.name.common === feature.properties.NAME;
+    return {
+      fillColor: isSelected ? '#3b82f6' : '#e2e8f0',
+      weight: isSelected ? 2 : 1,
+      opacity: 1,
+      color: isSelected ? '#1d4ed8' : '#94a3b8',
+      fillOpacity: isSelected ? 0.7 : 0.5
+    };
+  };
+
+  const onEachFeature = (feature: any, layer: any) => {
+    layer.on({
+      mouseover: (e: any) => {
+        const layer = e.target;
+        layer.setStyle({
+          weight: 3,
+          color: '#1d4ed8',
+          fillOpacity: 0.7
+        });
+      },
+      mouseout: (e: any) => {
+        const layer = e.target;
+        layer.setStyle(getCountryStyle(feature));
+      },
+      click: () => {
+        const countryName = feature.properties.NAME;
+        const matchedCountry = countries.find(c => 
+          c.name.common.toLowerCase().includes(countryName.toLowerCase()) ||
+          countryName.toLowerCase().includes(c.name.common.toLowerCase()) ||
+          c.name.official.toLowerCase().includes(countryName.toLowerCase())
+        );
+        
+        if (matchedCountry) {
+          onCountrySelect(matchedCountry);
+        }
+      }
+    });
+  };
+
+  if (!geoData) return null;
+
+  return (
+    <GeoJSON 
+      data={geoData} 
+      style={getCountryStyle}
+      onEachFeature={onEachFeature}
+    />
+  );
+};
+
+const MapEvents: React.FC<{ selectedCountry: Country | null }> = ({ selectedCountry }) => {
+  const map = useMapEvents({});
+
+  useEffect(() => {
+    if (selectedCountry && selectedCountry.latlng) {
+      map.setView([selectedCountry.latlng[0], selectedCountry.latlng[1]], 5);
+    }
+  }, [selectedCountry, map]);
+
+  return null;
+};
+
 const WorldMap: React.FC<WorldMapProps> = ({ onCountrySelect, selectedCountry }) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState<string>('');
-  const [tokenEntered, setTokenEntered] = useState(false);
   const [countries, setCountries] = useState<Country[]>([]);
 
   // Fetch countries data
@@ -54,135 +134,30 @@ const WorldMap: React.FC<WorldMapProps> = ({ onCountrySelect, selectedCountry })
     fetchCountries();
   }, []);
 
-  const handleTokenSubmit = () => {
-    if (mapboxToken.trim()) {
-      setTokenEntered(true);
-      initializeMap(mapboxToken.trim());
-    }
-  };
-
-  const initializeMap = (token: string) => {
-    if (!mapContainer.current) return;
-
-    mapboxgl.accessToken = token;
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      zoom: 2,
-      center: [0, 20],
-      projection: 'naturalEarth',
-    });
-
-    map.current.addControl(
-      new mapboxgl.NavigationControl({
-        visualizePitch: false,
-      }),
-      'top-right'
-    );
-
-    map.current.on('load', () => {
-      // Add hover effect for countries
-      map.current?.on('mouseenter', 'country-fills', () => {
-        if (map.current) {
-          map.current.getCanvas().style.cursor = 'pointer';
-        }
-      });
-
-      map.current?.on('mouseleave', 'country-fills', () => {
-        if (map.current) {
-          map.current.getCanvas().style.cursor = '';
-        }
-      });
-
-      // Handle country clicks
-      map.current?.on('click', async (e) => {
-        const features = map.current?.queryRenderedFeatures(e.point);
-        if (features && features.length > 0) {
-          const countryFeature = features.find(f => f.source === 'composite' && f.sourceLayer === 'country_label');
-          
-          if (countryFeature && countryFeature.properties) {
-            const countryName = countryFeature.properties.name_en;
-            const matchedCountry = countries.find(c => 
-              c.name.common.toLowerCase() === countryName.toLowerCase() ||
-              c.name.official.toLowerCase() === countryName.toLowerCase()
-            );
-            
-            if (matchedCountry) {
-              onCountrySelect(matchedCountry);
-              
-              // Fly to country
-              if (matchedCountry.latlng) {
-                map.current?.flyTo({
-                  center: [matchedCountry.latlng[1], matchedCountry.latlng[0]],
-                  zoom: 5,
-                  duration: 2000
-                });
-              }
-            }
-          }
-        }
-      });
-    });
-  };
-
-  useEffect(() => {
-    return () => {
-      map.current?.remove();
-    };
-  }, []);
-
-  if (!tokenEntered) {
-    return (
-      <div className="flex-1 flex items-center justify-center bg-gradient-subtle p-8">
-        <div className="bg-card rounded-lg shadow-card p-8 max-w-md w-full">
-          <div className="text-center mb-6">
-            <MapPin className="h-12 w-12 text-primary mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Connect Mapbox</h3>
-            <p className="text-muted-foreground text-sm">
-              Enter your Mapbox public token to view the interactive world map.
-              Get your token at{' '}
-              <a 
-                href="https://mapbox.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                mapbox.com
-              </a>
-            </p>
-          </div>
-          
-          <div className="space-y-4">
-            <Input
-              type="text"
-              placeholder="pk.eyJ1IjoieW91cnVzZXJuYW1lIiwi..."
-              value={mapboxToken}
-              onChange={(e) => setMapboxToken(e.target.value)}
-              className="font-mono text-sm"
-            />
-            <Button 
-              onClick={handleTokenSubmit}
-              className="w-full"
-              disabled={!mapboxToken.trim()}
-            >
-              Connect Map
-            </Button>
-          </div>
-          
-          <p className="text-xs text-muted-foreground mt-4 text-center">
-            Your token is only stored in your browser and never sent to our servers.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex-1 relative">
-      <div ref={mapContainer} className="absolute inset-0 rounded-lg" />
+      <MapContainer
+        center={[20, 0]}
+        zoom={2}
+        className="absolute inset-0 rounded-lg"
+        style={{ height: '100%', width: '100%' }}
+        scrollWheelZoom={true}
+        zoomControl={true}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <CountryLayer 
+          countries={countries}
+          onCountrySelect={onCountrySelect}
+          selectedCountry={selectedCountry}
+        />
+        <MapEvents selectedCountry={selectedCountry} />
+      </MapContainer>
+      
       {selectedCountry && (
-        <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg p-3 shadow-soft max-w-xs">
+        <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg p-3 shadow-soft max-w-xs z-[1000]">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-2xl">{selectedCountry.flag}</span>
             <span className="font-semibold text-sm">{selectedCountry.name.common}</span>
