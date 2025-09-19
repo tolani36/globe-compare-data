@@ -54,17 +54,19 @@ const CountryDetails: React.FC<CountryDetailsProps> = ({ country }) => {
     );
   }
 
-  const formatNumber = (num: number): string => {
+  const formatNumber = (num?: number | null): string => {
+    if (typeof num !== 'number' || isNaN(num)) return 'N/A';
     return new Intl.NumberFormat('en-US').format(num);
   };
 
-  const formatPopulation = (pop: number): string => {
-    if (pop >= 1000000000) {
-      return `${(pop / 1000000000).toFixed(1)}B`;
-    } else if (pop >= 1000000) {
-      return `${(pop / 1000000).toFixed(1)}M`;
-    } else if (pop >= 1000) {
-      return `${(pop / 1000).toFixed(1)}K`;
+  const formatPopulation = (pop?: number | null): string => {
+    if (typeof pop !== 'number' || isNaN(pop)) return 'N/A';
+    if (pop >= 1_000_000_000) {
+      return `${(pop / 1_000_000_000).toFixed(1)}B`;
+    } else if (pop >= 1_000_000) {
+      return `${(pop / 1_000_000).toFixed(1)}M`;
+    } else if (pop >= 1_000) {
+      return `${(pop / 1_000).toFixed(1)}K`;
     }
     return pop.toString();
   };
@@ -117,7 +119,10 @@ const CountryDetails: React.FC<CountryDetailsProps> = ({ country }) => {
             <div>
               <p className="text-sm font-medium">Coordinates</p>
               <p className="text-muted-foreground font-mono text-xs">
-                {country.latlng[0].toFixed(4)}°, {country.latlng[1].toFixed(4)}°
+                {Array.isArray(country.latlng) && country.latlng.length === 2 &&
+                typeof country.latlng[0] === 'number' && typeof country.latlng[1] === 'number'
+                  ? `${country.latlng[0].toFixed(4)}°, ${country.latlng[1].toFixed(4)}°`
+                  : 'N/A'}
               </p>
             </div>
           </CardContent>
@@ -144,7 +149,9 @@ const CountryDetails: React.FC<CountryDetailsProps> = ({ country }) => {
               <div className="text-right">
                 <p className="font-semibold">{formatNumber(country.area)} km²</p>
                 <p className="text-xs text-muted-foreground">
-                  {Math.round(country.population / country.area)} people/km²
+                  {typeof country.population === 'number' && typeof country.area === 'number' && country.area > 0
+                    ? `${Math.round(country.population / country.area)} people/km²`
+                    : 'N/A'}
                 </p>
               </div>
             </div>
@@ -205,8 +212,8 @@ const CountryDetails: React.FC<CountryDetailsProps> = ({ country }) => {
           <CardContent>
             <div className="aspect-video bg-muted rounded-lg overflow-hidden">
               <img 
-                src={country.flags.svg} 
-                alt={`Flag of ${country.name.common}`}
+                src={country.flags?.svg || country.flags?.png} 
+                alt={`Flag of ${country.name?.common || 'country flag'}`}
                 loading="lazy"
                 className="w-full h-full object-cover"
               />

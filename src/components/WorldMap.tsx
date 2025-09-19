@@ -198,10 +198,10 @@ const WorldMap: React.FC<WorldMapProps> = ({ onCountrySelect, selectedCountry })
   }, [selectedCountry]);
 
   return (
-    <div className="flex-1 relative">
+    <div className="flex-1 relative min-h-[320px] md:min-h-0">
       <div ref={mapContainerRef} className="absolute inset-0 rounded-lg" />
       {selectedCountry && (
-        <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg p-3 shadow-soft max-w-xs z-[1000]">
+        <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg p-3 shadow-soft max-w-xs z-[1000] animate-fade-in">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-2xl">{selectedCountry.flag}</span>
             <span className="font-semibold text-sm">{selectedCountry.name.common}</span>
@@ -211,6 +211,7 @@ const WorldMap: React.FC<WorldMapProps> = ({ onCountrySelect, selectedCountry })
       )}
     </div>
   );
+
 };
 
 function getCountryStyle(feature: any, selectedCountry: Country | null) {
