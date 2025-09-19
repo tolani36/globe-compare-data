@@ -39,11 +39,42 @@ const WorldMap: React.FC<WorldMapProps> = ({ onCountrySelect, selectedCountry })
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const response = await fetch('https://restcountries.com/v3.1/all');
-        const data = await response.json();
-        setCountries(data);
+        const res = await fetch(
+          'https://restcountries.com/v3.1/all?fields=name,cca3,population,area,capital,region,subregion,languages,currencies,flag,flags,latlng'
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setCountries(data as Country[]);
+          return;
+        }
+        throw new Error('Invalid countries payload');
       } catch (error) {
-        console.error('Error fetching countries:', error);
+        // Fallback to GitHub dataset
+        try {
+          const res2 = await fetch(
+            'https://raw.githubusercontent.com/mledoze/countries/master/countries.json'
+          );
+          const data2 = await res2.json();
+          const mapped = (Array.isArray(data2) ? data2 : []).map((c: any) => ({
+            name: c.name,
+            cca3: c.cca3,
+            population: c.population,
+            area: c.area,
+            capital: c.capital,
+            region: c.region,
+            subregion: c.subregion,
+            languages: c.languages,
+            currencies: c.currencies,
+            flag: c.flag,
+            flags: c.flags,
+            latlng: c.latlng,
+          })) as Country[];
+          setCountries(mapped);
+        } catch (err) {
+          console.error('Error fetching countries:', err);
+          setCountries([]);
+        }
       }
     };
 
@@ -107,28 +138,42 @@ const WorldMap: React.FC<WorldMapProps> = ({ onCountrySelect, selectedCountry })
               target.setStyle(getCountryStyle(feature, selectedCountry) as any);
             });
             layer.on('click', () => {
-              const countryName =
-                feature.properties?.NAME ||
-                feature.properties?.ADMIN ||
-                feature.properties?.NAME_EN ||
-                feature.properties?.name;
+              const iso3 =
+                feature.properties?.ISO_A3 ||
+                feature.properties?.ADM0_A3 ||
+                feature.properties?.ISO_A3_EH ||
+                feature.properties?.ADM0_A3_US;
 
-              if (countryName && countries.length > 0) {
-                const matched = countries.find((c) =>
-                  [c.name.common, c.name.official]
-                    .filter(Boolean)
-                    .some((n) =>
-                      n.toLowerCase() === countryName.toLowerCase() ||
-                      countryName.toLowerCase().includes(n.toLowerCase()) ||
-                      n.toLowerCase().includes(countryName.toLowerCase())
-                    )
-                );
+              let matched: Country | undefined;
 
-                if (matched) {
-                  onCountrySelect(matched);
-                  if (matched.latlng) {
-                    mapRef.current?.setView([matched.latlng[0], matched.latlng[1]], 5);
-                  }
+              if (iso3 && countries.length > 0) {
+                matched = countries.find((c) => c.cca3?.toUpperCase() === String(iso3).toUpperCase());
+              }
+
+              if (!matched) {
+                const countryName =
+                  feature.properties?.NAME ||
+                  feature.properties?.ADMIN ||
+                  feature.properties?.NAME_EN ||
+                  feature.properties?.name;
+
+                if (countryName && countries.length > 0) {
+                  matched = countries.find((c) =>
+                    [c.name.common, c.name.official]
+                      .filter(Boolean)
+                      .some((n) =>
+                        n.toLowerCase() === String(countryName).toLowerCase() ||
+                        String(countryName).toLowerCase().includes(n.toLowerCase()) ||
+                        n.toLowerCase().includes(String(countryName).toLowerCase())
+                      )
+                  );
+                }
+              }
+
+              if (matched) {
+                onCountrySelect(matched);
+                if (matched.latlng) {
+                  mapRef.current?.setView([matched.latlng[0], matched.latlng[1]], 5);
                 }
               }
             });

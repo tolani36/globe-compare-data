@@ -42,7 +42,7 @@ interface CountryDetailsProps {
 const CountryDetails: React.FC<CountryDetailsProps> = ({ country }) => {
   if (!country) {
     return (
-      <div className="w-96 bg-gradient-subtle p-8 flex items-center justify-center">
+      <div className="w-full md:w-96 bg-gradient-subtle p-8 flex items-center justify-center">
         <div className="text-center">
           <Globe className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">Explore the World</h3>
@@ -73,7 +73,7 @@ const CountryDetails: React.FC<CountryDetailsProps> = ({ country }) => {
   const currencies = country.currencies ? Object.values(country.currencies) : [];
 
   return (
-    <div className="w-96 bg-background border-l border-border overflow-y-auto">
+    <div className="w-full md:w-96 bg-background border-l border-border overflow-y-auto">
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="text-center space-y-4">
@@ -207,6 +207,7 @@ const CountryDetails: React.FC<CountryDetailsProps> = ({ country }) => {
               <img 
                 src={country.flags.svg} 
                 alt={`Flag of ${country.name.common}`}
+                loading="lazy"
                 className="w-full h-full object-cover"
               />
             </div>

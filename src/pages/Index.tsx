@@ -33,11 +33,41 @@ const Index = () => {
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca3,population,area,capital,region,subregion,languages,currencies,flag,flags,latlng');
-        const data = await response.json();
-        setCountries(data);
+        const res = await fetch(
+          'https://restcountries.com/v3.1/all?fields=name,cca3,population,area,capital,region,subregion,languages,currencies,flag,flags,latlng'
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setCountries(data);
+          return;
+        }
+        throw new Error('Invalid countries payload');
       } catch (error) {
-        console.error('Error fetching countries:', error);
+        try {
+          const res2 = await fetch(
+            'https://raw.githubusercontent.com/mledoze/countries/master/countries.json'
+          );
+          const data2 = await res2.json();
+          const mapped = (Array.isArray(data2) ? data2 : []).map((c: any) => ({
+            name: c.name,
+            cca3: c.cca3,
+            population: c.population,
+            area: c.area,
+            capital: c.capital,
+            region: c.region,
+            subregion: c.subregion,
+            languages: c.languages,
+            currencies: c.currencies,
+            flag: c.flag,
+            flags: c.flags,
+            latlng: c.latlng,
+          }));
+          setCountries(mapped);
+        } catch (err) {
+          console.error('Error fetching countries:', err);
+          setCountries([]);
+        }
       }
     };
 
@@ -55,7 +85,7 @@ const Index = () => {
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <header className="bg-card border-b border-border shadow-soft">
+      <header className="bg-gradient-subtle border-b border-border shadow-soft">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -89,7 +119,7 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
         <WorldMap 
           onCountrySelect={handleCountrySelect}
           selectedCountry={selectedCountry}
