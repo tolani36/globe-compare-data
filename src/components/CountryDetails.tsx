@@ -10,7 +10,10 @@ import {
   DollarSign, 
   Flag,
   Building,
-  TrendingUp
+  TrendingUp,
+  Crown,
+  Calendar,
+  Church
 } from 'lucide-react';
 
 interface Country {
@@ -33,6 +36,10 @@ interface Country {
   };
   latlng: [number, number];
   gdp?: number;
+  // Additional data from external sources
+  religion?: string;
+  president?: string;
+  independence?: string;
 }
 
 interface CountryDetailsProps {
@@ -197,6 +204,51 @@ const CountryDetails: React.FC<CountryDetailsProps> = ({ country }) => {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Religion */}
+        {country.religion && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Church className="h-5 w-5 text-chart-accent" />
+                Most Practiced Religion
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">{country.religion}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Government/President */}
+        {country.president && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Crown className="h-5 w-5 text-chart-primary" />
+                Current Leader
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">{country.president}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Independence */}
+        {country.independence && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-chart-secondary" />
+                Independence
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">{country.independence}</p>
             </CardContent>
           </Card>
         )}

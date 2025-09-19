@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import WorldMap from '@/components/WorldMap';
 import CountryDetails from '@/components/CountryDetails';
 import SearchBar from '@/components/SearchBar';
+import CountryDataService from '@/services/countryDataService';
 import { Globe, BarChart3 } from 'lucide-react';
 
 interface Country {
@@ -23,6 +24,10 @@ interface Country {
     svg: string;
   };
   latlng: [number, number];
+  // Additional data from external sources
+  religion?: string;
+  president?: string;
+  independence?: string;
 }
 
 const Index = () => {
@@ -74,8 +79,28 @@ const Index = () => {
     fetchCountries();
   }, []);
 
-  const handleCountrySelect = (country: Country) => {
-    setSelectedCountry(country);
+  const handleCountrySelect = async (country: Country) => {
+    console.log('Country selected:', country.name.common);
+    
+    // Fetch additional data from external sources
+    try {
+      const additionalData = await CountryDataService.fetchAdditionalData(
+        country.cca3, 
+        country.name.common
+      );
+      
+      // Merge additional data with country object
+      const enrichedCountry = {
+        ...country,
+        ...additionalData
+      };
+      
+      setSelectedCountry(enrichedCountry);
+    } catch (error) {
+      console.error('Failed to fetch additional country data:', error);
+      // Fall back to basic country data
+      setSelectedCountry(country);
+    }
   };
 
   const handleSearch = (query: string) => {
