@@ -33,7 +33,7 @@ const Index = () => {
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const response = await fetch('https://restcountries.com/v3.1/all');
+        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca3,population,area,capital,region,subregion,languages,currencies,flag,flags,latlng');
         const data = await response.json();
         setCountries(data);
       } catch (error) {
