@@ -5,7 +5,8 @@ import SearchBar from '@/components/SearchBar';
 import RankingsList from '@/components/RankingsList';
 import DataVisualizations from '@/components/DataVisualizations';
 import CountryDataService from '@/services/countryDataService';
-import { Globe, BarChart3, TrendingUp, Award } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Globe, BarChart3, TrendingUp, Award, Map, BarChart4 } from 'lucide-react';
 
 interface Country {
   name: {
@@ -120,7 +121,7 @@ const Index = () => {
                 <Globe className="h-8 w-8 text-primary" />
                 <div>
                   <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                    World Explorer
+                    World Data Hub
                   </h1>
                   <p className="text-sm text-muted-foreground">
                     Discover countries, cultures, and global analytics
@@ -140,42 +141,61 @@ const Index = () => {
               </div>
             </div>
           </div>
-          
-          <div className="w-full max-w-2xl">
-            <SearchBar 
-              countries={countries}
-              onCountrySelect={handleCountrySelect}
-              onSearch={handleSearch}
-            />
-          </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left Panel - Map and Country Details */}
-        <div className="flex flex-1 flex-col md:flex-row">
-          <WorldMap 
-            onCountrySelect={handleCountrySelect}
-            selectedCountry={selectedCountry}
-          />
-          <CountryDetails country={selectedCountry} />
-        </div>
-        
-        {/* Right Panel - Analytics */}
-        <div className="w-full lg:w-96 xl:w-[28rem] bg-gradient-subtle border-l border-border overflow-y-auto">
-          <div className="p-6 space-y-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Award className="h-5 w-5 text-chart-primary" />
-              <h2 className="text-lg font-semibold">Global Analytics</h2>
+      <div className="flex-1 overflow-hidden">
+        <Tabs defaultValue="explorer" className="h-full flex flex-col">
+          <div className="px-6 pt-4">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="explorer" className="flex items-center gap-2">
+                <Map className="h-4 w-4" />
+                World Explorer
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="flex items-center gap-2">
+                <BarChart4 className="h-4 w-4" />
+                Global Analytics
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="explorer" className="flex-1 overflow-hidden mt-0 pt-4">
+            <div className="px-6 pb-4">
+              <SearchBar 
+                countries={countries}
+                onCountrySelect={handleCountrySelect}
+                onSearch={handleSearch}
+              />
             </div>
             
-            <div className="space-y-6">
-              <RankingsList />
-              <DataVisualizations />
+            <div className="flex flex-1 overflow-hidden">
+              <div className="flex flex-1 flex-col md:flex-row">
+                <WorldMap 
+                  onCountrySelect={handleCountrySelect}
+                  selectedCountry={selectedCountry}
+                />
+                <CountryDetails country={selectedCountry} />
+              </div>
             </div>
-          </div>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="flex-1 overflow-hidden mt-0 pt-4">
+            <div className="h-full overflow-y-auto">
+              <div className="px-6 pb-6 space-y-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Award className="h-5 w-5 text-chart-primary" />
+                  <h2 className="text-lg font-semibold">Global Analytics Dashboard</h2>
+                </div>
+                
+                <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                  <RankingsList />
+                  <DataVisualizations />
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

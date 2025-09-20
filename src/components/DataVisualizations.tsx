@@ -84,7 +84,11 @@ const DataVisualizations: React.FC = () => {
       populationGrowthData.forEach(country => {
         const dataPoint = country.data.find(d => d.year === year);
         if (dataPoint) {
-          point[country.country] = dataPoint.population;
+          // Use abbreviated country names for better chart readability
+          const countryName = country.country === 'United States' ? 'USA' : 
+                            country.country === 'Russian Federation' ? 'Russia' : 
+                            country.country;
+          point[countryName] = dataPoint.population;
         }
       });
       return point;
@@ -185,17 +189,23 @@ const DataVisualizations: React.FC = () => {
                         formatter={(value: number) => [formatPopulation(value), '']}
                       />
                       <Legend />
-                      {populationGrowthData.map((country, index) => (
-                        <Line
-                          key={country.country}
-                          type="monotone"
-                          dataKey={country.country}
-                          stroke={lineColors[index % lineColors.length]}
-                          strokeWidth={2}
-                          dot={{ r: 3 }}
-                          activeDot={{ r: 5 }}
-                        />
-                      ))}
+                      {populationGrowthData.map((country, index) => {
+                        const countryName = country.country === 'United States' ? 'USA' : 
+                                          country.country === 'Russian Federation' ? 'Russia' : 
+                                          country.country;
+                        return (
+                          <Line
+                            key={country.country}
+                            type="monotone"
+                            dataKey={countryName}
+                            stroke={lineColors[index % lineColors.length]}
+                            strokeWidth={2}
+                            dot={{ r: 3 }}
+                            activeDot={{ r: 5 }}
+                            name={countryName}
+                          />
+                        );
+                      })}
                     </LineChart>
                   </ResponsiveContainer>
                 </div>

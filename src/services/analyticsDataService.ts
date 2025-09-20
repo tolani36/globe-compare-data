@@ -201,17 +201,17 @@ class AnalyticsDataService {
       // Since there's no reliable free API for language speaker counts,
       // we'll use curated data based on multiple sources
       const languages: LanguageData[] = [
+        { language: 'English', speakers: 1500000000, countries: ['USA', 'UK', 'Canada', 'Australia', 'India'] },
         { language: 'Mandarin Chinese', speakers: 1118000000, countries: ['China', 'Taiwan', 'Singapore'] },
         { language: 'Hindi', speakers: 602000000, countries: ['India'] },
-        { language: 'English', speakers: 1500000000, countries: ['USA', 'UK', 'Canada', 'Australia', 'India'] },
         { language: 'Spanish', speakers: 559000000, countries: ['Spain', 'Mexico', 'Argentina', 'Colombia'] },
         { language: 'Arabic', speakers: 422000000, countries: ['Saudi Arabia', 'Egypt', 'UAE', 'Morocco'] },
+        { language: 'French', speakers: 280000000, countries: ['France', 'Canada', 'Belgium', 'Switzerland'] },
         { language: 'Bengali', speakers: 268000000, countries: ['Bangladesh', 'India'] },
         { language: 'Portuguese', speakers: 258000000, countries: ['Brazil', 'Portugal', 'Angola'] },
         { language: 'Russian', speakers: 258000000, countries: ['Russia', 'Belarus', 'Kazakhstan'] },
         { language: 'Japanese', speakers: 125000000, countries: ['Japan'] },
-        { language: 'French', speakers: 280000000, countries: ['France', 'Canada', 'Belgium', 'Switzerland'] },
-      ];
+      ].sort((a, b) => b.speakers - a.speakers);
 
       // Cache the result
       this.cache.set(cacheKey, {
