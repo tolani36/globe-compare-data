@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import WorldMap from '@/components/WorldMap';
 import CountryDetails from '@/components/CountryDetails';
 import SearchBar from '@/components/SearchBar';
+import RankingsList from '@/components/RankingsList';
+import DataVisualizations from '@/components/DataVisualizations';
 import CountryDataService from '@/services/countryDataService';
-import { Globe, BarChart3 } from 'lucide-react';
+import { Globe, BarChart3, TrendingUp, Award } from 'lucide-react';
 
 interface Country {
   name: {
@@ -121,15 +123,21 @@ const Index = () => {
                     World Explorer
                   </h1>
                   <p className="text-sm text-muted-foreground">
-                    Discover countries, cultures, and data
+                    Discover countries, cultures, and global analytics
                   </p>
                 </div>
               </div>
             </div>
             
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <BarChart3 className="h-4 w-4" />
-              <span>{countries.length} countries loaded</span>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                <span>{countries.length} countries</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                <span>Live data</span>
+              </div>
             </div>
           </div>
           
@@ -144,12 +152,30 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
-        <WorldMap 
-          onCountrySelect={handleCountrySelect}
-          selectedCountry={selectedCountry}
-        />
-        <CountryDetails country={selectedCountry} />
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Panel - Map and Country Details */}
+        <div className="flex flex-1 flex-col md:flex-row">
+          <WorldMap 
+            onCountrySelect={handleCountrySelect}
+            selectedCountry={selectedCountry}
+          />
+          <CountryDetails country={selectedCountry} />
+        </div>
+        
+        {/* Right Panel - Analytics */}
+        <div className="w-full lg:w-96 xl:w-[28rem] bg-gradient-subtle border-l border-border overflow-y-auto">
+          <div className="p-6 space-y-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Award className="h-5 w-5 text-chart-primary" />
+              <h2 className="text-lg font-semibold">Global Analytics</h2>
+            </div>
+            
+            <div className="space-y-6">
+              <RankingsList />
+              <DataVisualizations />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
