@@ -78,87 +78,99 @@ const RankingsList: React.FC = () => {
   };
 
   const RankingItem: React.FC<{ item: CountryRanking; index: number; formatter: (value: number) => string }> = ({ item, index, formatter }) => (
-    <div className="flex items-center justify-between p-4 rounded-lg bg-card hover:bg-muted/50 transition-colors border border-border/50 shadow-sm">
-      <div className="flex items-center gap-3">
-        {getRankIcon(index)}
-        <div>
-          <p className="font-semibold text-sm">{item.country}</p>
-          <p className="text-xs text-muted-foreground font-mono">{item.code}</p>
+    <div className="group flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-card to-card/50 hover:from-muted/30 hover:to-muted/10 transition-all duration-300 border border-border/50 shadow-card hover:shadow-soft">
+      <div className="flex items-center gap-4">
+        <div className="flex-shrink-0">
+          {getRankIcon(index)}
+        </div>
+        <div className="min-w-0">
+          <p className="font-semibold text-base text-foreground group-hover:text-primary transition-colors truncate">{item.country}</p>
+          <p className="text-xs text-muted-foreground font-mono uppercase tracking-wider">{item.code}</p>
         </div>
       </div>
-      <Badge variant="secondary" className="font-mono font-semibold">
-        {formatter(item.value)}
-      </Badge>
+      <div className="flex-shrink-0">
+        <Badge variant="outline" className="font-mono font-bold text-sm px-3 py-1 bg-gradient-primary text-primary-foreground border-primary/20">
+          {formatter(item.value)}
+        </Badge>
+      </div>
     </div>
   );
 
   const LanguageItem: React.FC<{ item: LanguageData; index: number }> = ({ item, index }) => (
-    <div className="flex items-center justify-between p-4 rounded-lg bg-card hover:bg-muted/50 transition-colors border border-border/50 shadow-sm">
-      <div className="flex items-center gap-3">
-        {getRankIcon(index)}
-        <div>
-          <p className="font-semibold text-sm">{item.language}</p>
-          <p className="text-xs text-muted-foreground">
+    <div className="group flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-card to-card/50 hover:from-muted/30 hover:to-muted/10 transition-all duration-300 border border-border/50 shadow-card hover:shadow-soft">
+      <div className="flex items-center gap-4">
+        <div className="flex-shrink-0">
+          {getRankIcon(index)}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-base text-foreground group-hover:text-primary transition-colors">{item.language}</p>
+          <p className="text-xs text-muted-foreground line-clamp-1">
             Primary in: {item.countries.slice(0, 2).join(', ')}{item.countries.length > 2 ? ` +${item.countries.length - 2} more` : ''}
           </p>
         </div>
       </div>
-      <Badge variant="secondary" className="font-mono font-semibold">
-        {formatNumber(item.speakers)}
-      </Badge>
+      <div className="flex-shrink-0">
+        <Badge variant="outline" className="font-mono font-bold text-sm px-3 py-1 bg-gradient-primary text-primary-foreground border-primary/20">
+          {formatNumber(item.speakers)}
+        </Badge>
+      </div>
     </div>
   );
 
   const LoadingSkeleton = () => (
     <div className="space-y-3">
       {Array.from({ length: 10 }).map((_, i) => (
-        <div key={i} className="flex items-center justify-between p-3">
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-5 w-5 rounded-full" />
+        <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-muted/20 to-muted/10 border border-border/30">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-6 w-6 rounded-full" />
             <div>
-              <Skeleton className="h-4 w-24 mb-1" />
-              <Skeleton className="h-3 w-12" />
+              <Skeleton className="h-5 w-32 mb-2" />
+              <Skeleton className="h-3 w-16" />
             </div>
           </div>
-          <Skeleton className="h-6 w-16" />
+          <Skeleton className="h-8 w-20 rounded-md" />
         </div>
       ))}
     </div>
   );
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          Global Rankings
+    <Card className="w-full border-0 shadow-card bg-gradient-subtle">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          🏆 Global Rankings
         </CardTitle>
+        <p className="text-sm text-muted-foreground">Discover the world's leading nations across key metrics</p>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="population" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="population" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-3 bg-muted/30 p-1">
+            <TabsTrigger value="population" className="flex items-center gap-2 data-[state=active]:bg-gradient-primary data-[state=active]:text-primary-foreground transition-all">
               <Users className="h-4 w-4" />
-              Population
+              <span className="hidden sm:inline">Population</span>
+              <span className="sm:hidden">Pop</span>
             </TabsTrigger>
-            <TabsTrigger value="gdp" className="flex items-center gap-2">
+            <TabsTrigger value="gdp" className="flex items-center gap-2 data-[state=active]:bg-gradient-primary data-[state=active]:text-primary-foreground transition-all">
               <TrendingUp className="h-4 w-4" />
               GDP
             </TabsTrigger>
-            <TabsTrigger value="languages" className="flex items-center gap-2">
+            <TabsTrigger value="languages" className="flex items-center gap-2 data-[state=active]:bg-gradient-primary data-[state=active]:text-primary-foreground transition-all">
               <Languages className="h-4 w-4" />
-              Languages
+              <span className="hidden sm:inline">Languages</span>
+              <span className="sm:hidden">Lang</span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="population" className="mt-6">
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-muted-foreground mb-4">
-                Top 10 Most Populated Countries
-              </h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Users className="h-5 w-5 text-chart-secondary" />
+                <h3 className="text-lg font-semibold">Top 10 Most Populated Countries</h3>
+              </div>
               {loading ? (
                 <LoadingSkeleton />
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {populationRankings.map((item, index) => (
                     <RankingItem 
                       key={item.code} 
@@ -173,14 +185,15 @@ const RankingsList: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="gdp" className="mt-6">
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-muted-foreground mb-4">
-                Top 10 Richest Countries by GDP
-              </h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp className="h-5 w-5 text-chart-primary" />
+                <h3 className="text-lg font-semibold">Top 10 Richest Countries by GDP</h3>
+              </div>
               {loading ? (
                 <LoadingSkeleton />
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {gdpRankings.map((item, index) => (
                     <RankingItem 
                       key={item.code} 
@@ -195,14 +208,15 @@ const RankingsList: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="languages" className="mt-6">
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-muted-foreground mb-4">
-                Most Spoken Languages Globally
-              </h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Languages className="h-5 w-5 text-chart-accent" />
+                <h3 className="text-lg font-semibold">Most Spoken Languages Globally</h3>
+              </div>
               {loading ? (
                 <LoadingSkeleton />
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {languageData.map((item, index) => (
                     <LanguageItem 
                       key={item.language} 

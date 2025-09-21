@@ -86,14 +86,16 @@ const CountryDetails: React.FC<CountryDetailsProps> = ({ country }) => {
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="text-center space-y-4">
-          <div className="text-6xl mb-2">{country.flag}</div>
-          <div>
-            <h1 className="text-2xl font-bold mb-1">{country.name.common}</h1>
-            <p className="text-muted-foreground text-sm">{country.name.official}</p>
-            <Badge variant="secondary" className="mt-2">
-              {country.cca3}
-            </Badge>
+          <div className="flex items-center justify-center gap-3">
+            <div className="text-4xl">{country.flag}</div>
+            <div className="text-center">
+              <h1 className="text-2xl font-bold">{country.name.common}</h1>
+              <p className="text-muted-foreground text-sm">{country.name.official}</p>
+            </div>
           </div>
+          <Badge variant="secondary" className="mt-2">
+            {country.cca3}
+          </Badge>
         </div>
 
         <Separator />
