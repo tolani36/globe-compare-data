@@ -229,15 +229,25 @@ const DataVisualizations: React.FC = () => {
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ religion, percentage }) => `${religion}: ${percentage}%`}
-                        outerRadius={80}
+                        label={({ religion, percentage }) => percentage > 5 ? `${religion.length > 12 ? religion.substring(0, 12) + '...' : religion}` : ''}
+                        outerRadius={100}
+                        innerRadius={30}
                         fill="#8884d8"
                         dataKey="adherents"
+                        paddingAngle={2}
                       >
                         {religionData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
                         ))}
                       </Pie>
+                      <Legend 
+                        verticalAlign="bottom" 
+                        height={36}
+                        formatter={(value, entry) => {
+                          const religionEntry = religionData.find(r => r.religion === value);
+                          return religionEntry ? `${value} (${religionEntry.percentage}%)` : value;
+                        }}
+                      />
                       <Tooltip 
                         contentStyle={{
                           backgroundColor: 'hsl(var(--card))',
@@ -265,9 +275,13 @@ const DataVisualizations: React.FC = () => {
               {loading ? (
                 <LoadingSkeleton />
               ) : (
-                <div className="h-80 w-full">
+                <div className="h-96 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={languageData} layout="horizontal">
+                    <BarChart 
+                      data={languageData.slice().reverse()} 
+                      layout="horizontal"
+                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                    >
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis 
                         type="number" 
@@ -279,8 +293,9 @@ const DataVisualizations: React.FC = () => {
                         type="category" 
                         dataKey="language" 
                         stroke="hsl(var(--foreground))"
-                        fontSize={12}
-                        width={100}
+                        fontSize={11}
+                        width={120}
+                        interval={0}
                       />
                       <Tooltip 
                         contentStyle={{

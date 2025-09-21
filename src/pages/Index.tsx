@@ -160,7 +160,7 @@ const Index = () => {
             </TabsList>
           </div>
 
-          <TabsContent value="explorer" className="flex-1 overflow-hidden mt-0 pt-4">
+          <TabsContent value="explorer" className="flex-1 overflow-hidden mt-0 pt-4 flex flex-col">
             <div className="px-6 pb-4">
               <SearchBar 
                 countries={countries}
@@ -169,12 +169,14 @@ const Index = () => {
               />
             </div>
             
-            <div className="flex flex-1 overflow-hidden">
-              <div className="flex flex-1 flex-col md:flex-row">
-                <WorldMap 
-                  onCountrySelect={handleCountrySelect}
-                  selectedCountry={selectedCountry}
-                />
+            <div className="flex flex-1 overflow-hidden min-h-0">
+              <div className="flex flex-1 flex-col md:flex-row min-h-0">
+                <div className="flex-1 min-h-[400px] md:min-h-0">
+                  <WorldMap 
+                    onCountrySelect={handleCountrySelect}
+                    selectedCountry={selectedCountry}
+                  />
+                </div>
                 <CountryDetails country={selectedCountry} />
               </div>
             </div>

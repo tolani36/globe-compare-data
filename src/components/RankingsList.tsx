@@ -78,32 +78,32 @@ const RankingsList: React.FC = () => {
   };
 
   const RankingItem: React.FC<{ item: CountryRanking; index: number; formatter: (value: number) => string }> = ({ item, index, formatter }) => (
-    <div className="flex items-center justify-between p-3 rounded-lg bg-card hover:bg-muted/50 transition-colors">
+    <div className="flex items-center justify-between p-4 rounded-lg bg-card hover:bg-muted/50 transition-colors border border-border/50 shadow-sm">
       <div className="flex items-center gap-3">
         {getRankIcon(index)}
         <div>
-          <p className="font-medium">{item.country}</p>
-          <p className="text-xs text-muted-foreground">{item.code}</p>
+          <p className="font-semibold text-sm">{item.country}</p>
+          <p className="text-xs text-muted-foreground font-mono">{item.code}</p>
         </div>
       </div>
-      <Badge variant="secondary" className="font-mono">
+      <Badge variant="secondary" className="font-mono font-semibold">
         {formatter(item.value)}
       </Badge>
     </div>
   );
 
   const LanguageItem: React.FC<{ item: LanguageData; index: number }> = ({ item, index }) => (
-    <div className="flex items-center justify-between p-3 rounded-lg bg-card hover:bg-muted/50 transition-colors">
+    <div className="flex items-center justify-between p-4 rounded-lg bg-card hover:bg-muted/50 transition-colors border border-border/50 shadow-sm">
       <div className="flex items-center gap-3">
         {getRankIcon(index)}
         <div>
-          <p className="font-medium">{item.language}</p>
+          <p className="font-semibold text-sm">{item.language}</p>
           <p className="text-xs text-muted-foreground">
-            {item.countries.slice(0, 3).join(', ')}{item.countries.length > 3 ? '...' : ''}
+            Primary in: {item.countries.slice(0, 2).join(', ')}{item.countries.length > 2 ? ` +${item.countries.length - 2} more` : ''}
           </p>
         </div>
       </div>
-      <Badge variant="secondary" className="font-mono">
+      <Badge variant="secondary" className="font-mono font-semibold">
         {formatNumber(item.speakers)}
       </Badge>
     </div>

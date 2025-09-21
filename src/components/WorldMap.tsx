@@ -198,10 +198,10 @@ const WorldMap: React.FC<WorldMapProps> = ({ onCountrySelect, selectedCountry })
   }, [selectedCountry]);
 
   return (
-    <div className="flex-1 relative min-h-[320px] md:min-h-0">
-      <div ref={mapContainerRef} className="absolute inset-0 rounded-lg" />
+    <div className="w-full h-full relative">
+      <div ref={mapContainerRef} className="w-full h-full rounded-lg border border-border" />
       {selectedCountry && (
-        <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg p-3 shadow-soft max-w-xs z-[1000] animate-fade-in">
+        <div className="absolute top-4 left-4 bg-card/95 backdrop-blur-sm rounded-lg p-3 shadow-elegant max-w-xs z-[1000] border border-border/50">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-2xl">{selectedCountry.flag}</span>
             <span className="font-semibold text-sm">{selectedCountry.name.common}</span>
