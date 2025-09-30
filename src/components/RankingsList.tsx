@@ -78,18 +78,23 @@ const RankingsList: React.FC = () => {
   };
 
   const RankingItem: React.FC<{ item: CountryRanking; index: number; formatter: (value: number) => string }> = ({ item, index, formatter }) => (
-    <div className="group flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-card to-card/50 hover:from-muted/30 hover:to-muted/10 transition-all duration-300 border border-border/50 shadow-card hover:shadow-soft">
-      <div className="flex items-center gap-4">
-        <div className="flex-shrink-0">
+    <div className="group flex items-center justify-between p-4 rounded-xl bg-card hover:bg-muted/20 transition-all duration-300 border border-border shadow-sm hover:shadow-soft">
+      <div className="flex items-center gap-4 flex-1 min-w-0">
+        <div className="flex-shrink-0 w-8 flex items-center justify-center">
           {getRankIcon(index)}
         </div>
-        <div className="min-w-0">
-          <p className="font-semibold text-base text-foreground group-hover:text-primary transition-colors truncate">{item.country}</p>
+        {item.flag && (
+          <div className="text-2xl flex-shrink-0">{item.flag}</div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-base text-foreground group-hover:text-primary transition-colors truncate">
+            {item.country}
+          </p>
           <p className="text-xs text-muted-foreground font-mono uppercase tracking-wider">{item.code}</p>
         </div>
       </div>
-      <div className="flex-shrink-0">
-        <Badge variant="outline" className="font-mono font-bold text-sm px-3 py-1 bg-gradient-primary text-primary-foreground border-primary/20">
+      <div className="flex-shrink-0 ml-3">
+        <Badge variant="secondary" className="font-mono font-semibold text-sm px-3 py-1.5 whitespace-nowrap">
           {formatter(item.value)}
         </Badge>
       </div>
@@ -135,12 +140,17 @@ const RankingsList: React.FC = () => {
   );
 
   return (
-    <Card className="w-full border-0 shadow-card bg-gradient-subtle">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          🏆 Global Rankings
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">Discover the world's leading nations across key metrics</p>
+    <Card className="w-full border shadow-sm">
+      <CardHeader className="pb-4 space-y-2">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-gradient-primary">
+            <Trophy className="h-6 w-6 text-primary-foreground" />
+          </div>
+          <div>
+            <CardTitle className="text-2xl font-bold">Global Rankings</CardTitle>
+            <p className="text-sm text-muted-foreground">Top countries by key indicators (2025 data)</p>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="population" className="w-full">

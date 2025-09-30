@@ -183,17 +183,19 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="analytics" className="flex-1 overflow-hidden mt-0 pt-4">
-            <div className="h-full overflow-y-auto">
-              <div className="px-6 pb-6 space-y-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Award className="h-5 w-5 text-chart-primary" />
-                  <h2 className="text-lg font-semibold">Global Analytics Dashboard</h2>
+            <div className="h-full overflow-y-auto bg-gradient-subtle">
+              <div className="container mx-auto px-6 py-6 max-w-7xl space-y-6">
+                <div className="space-y-1">
+                  <h2 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                    Global Analytics Dashboard
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Comprehensive insights into world demographics, economy, and culture
+                  </p>
                 </div>
                 
-                <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-                  <RankingsList />
-                  <DataVisualizations />
-                </div>
+                <RankingsList />
+                <DataVisualizations />
               </div>
             </div>
           </TabsContent>

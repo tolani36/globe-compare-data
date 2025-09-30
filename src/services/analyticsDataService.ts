@@ -64,34 +64,23 @@ class AnalyticsDataService {
     }
 
     try {
-      // Get latest population data from World Bank
-      const response = await fetch(
-        `${this.WORLD_BANK_BASE}/country/all/indicator/${this.POPULATION_INDICATOR}?format=json&date=2022:2023&per_page=300`
-      );
+      // Use REST Countries API for more accurate and up-to-date data
+      const response = await fetch('https://restcountries.com/v3.1/all');
       
       if (!response.ok) throw new Error('Failed to fetch population data');
       
-      const [metadata, data] = await response.json();
+      const data = await response.json();
       
       if (!Array.isArray(data)) throw new Error('Invalid population data format');
 
-      // Get the most recent data for each country
-      const countryData = new Map<string, WorldBankIndicator>();
-      data.forEach((item: WorldBankIndicator) => {
-        if (item.value && item.country.id.length === 3) {
-          const existing = countryData.get(item.country.id);
-          if (!existing || item.date > existing.date) {
-            countryData.set(item.country.id, item);
-          }
-        }
-      });
-
       // Convert to ranking format and sort
-      const rankings: CountryRanking[] = Array.from(countryData.values())
-        .map(item => ({
-          country: item.country.value,
-          code: item.country.id,
-          value: item.value || 0
+      const rankings: CountryRanking[] = data
+        .filter(country => country.population && country.cca3)
+        .map(country => ({
+          country: country.name.common,
+          code: country.cca3,
+          value: country.population,
+          flag: country.flag
         }))
         .sort((a, b) => b.value - a.value)
         .slice(0, 10);
@@ -106,18 +95,18 @@ class AnalyticsDataService {
     } catch (error) {
       console.error('Failed to fetch population rankings:', error);
       
-      // Fallback data
+      // Fallback data with 2025 estimates
       return [
-        { country: 'China', code: 'CHN', value: 1412000000 },
-        { country: 'India', code: 'IND', value: 1380000000 },
-        { country: 'United States', code: 'USA', value: 331000000 },
-        { country: 'Indonesia', code: 'IDN', value: 273000000 },
-        { country: 'Pakistan', code: 'PAK', value: 225000000 },
-        { country: 'Brazil', code: 'BRA', value: 213000000 },
-        { country: 'Nigeria', code: 'NGA', value: 211000000 },
-        { country: 'Bangladesh', code: 'BGD', value: 165000000 },
-        { country: 'Russia', code: 'RUS', value: 146000000 },
-        { country: 'Mexico', code: 'MEX', value: 128000000 },
+        { country: 'India', code: 'IND', value: 1441719852, flag: '🇮🇳' },
+        { country: 'China', code: 'CHN', value: 1425178782, flag: '🇨🇳' },
+        { country: 'United States', code: 'USA', value: 341814420, flag: '🇺🇸' },
+        { country: 'Indonesia', code: 'IDN', value: 279798049, flag: '🇮🇩' },
+        { country: 'Pakistan', code: 'PAK', value: 240485658, flag: '🇵🇰' },
+        { country: 'Nigeria', code: 'NGA', value: 232679478, flag: '🇳🇬' },
+        { country: 'Brazil', code: 'BRA', value: 217637297, flag: '🇧🇷' },
+        { country: 'Bangladesh', code: 'BGD', value: 174701211, flag: '🇧🇩' },
+        { country: 'Russia', code: 'RUS', value: 144820423, flag: '🇷🇺' },
+        { country: 'Mexico', code: 'MEX', value: 130861007, flag: '🇲🇽' },
       ];
     }
   }
@@ -131,9 +120,9 @@ class AnalyticsDataService {
     }
 
     try {
-      // Get latest GDP data from World Bank
+      // Get latest GDP data from World Bank (2024 data)
       const response = await fetch(
-        `${this.WORLD_BANK_BASE}/country/all/indicator/${this.GDP_INDICATOR}?format=json&date=2021:2023&per_page=300`
+        `${this.WORLD_BANK_BASE}/country/all/indicator/${this.GDP_INDICATOR}?format=json&date=2022:2024&per_page=300`
       );
       
       if (!response.ok) throw new Error('Failed to fetch GDP data');
@@ -158,7 +147,8 @@ class AnalyticsDataService {
         .map(item => ({
           country: item.country.value,
           code: item.country.id,
-          value: item.value || 0
+          value: item.value || 0,
+          flag: this.getFlagEmoji(item.country.id)
         }))
         .sort((a, b) => b.value - a.value)
         .slice(0, 10);
@@ -173,20 +163,29 @@ class AnalyticsDataService {
     } catch (error) {
       console.error('Failed to fetch GDP rankings:', error);
       
-      // Fallback data (in trillion USD)
+      // Fallback data with 2024-2025 estimates (in USD)
       return [
-        { country: 'United States', code: 'USA', value: 25.46 },
-        { country: 'China', code: 'CHN', value: 17.73 },
-        { country: 'Japan', code: 'JPN', value: 4.94 },
-        { country: 'Germany', code: 'DEU', value: 4.26 },
-        { country: 'India', code: 'IND', value: 3.74 },
-        { country: 'United Kingdom', code: 'GBR', value: 3.13 },
-        { country: 'France', code: 'FRA', value: 2.94 },
-        { country: 'Italy', code: 'ITA', value: 2.11 },
-        { country: 'Brazil', code: 'BRA', value: 2.05 },
-        { country: 'Canada', code: 'CAN', value: 1.99 },
+        { country: 'United States', code: 'USA', value: 28781000000000, flag: '🇺🇸' },
+        { country: 'China', code: 'CHN', value: 18532000000000, flag: '🇨🇳' },
+        { country: 'Germany', code: 'DEU', value: 4591000000000, flag: '🇩🇪' },
+        { country: 'Japan', code: 'JPN', value: 4110000000000, flag: '🇯🇵' },
+        { country: 'India', code: 'IND', value: 4051000000000, flag: '🇮🇳' },
+        { country: 'United Kingdom', code: 'GBR', value: 3495000000000, flag: '🇬🇧' },
+        { country: 'France', code: 'FRA', value: 3130000000000, flag: '🇫🇷' },
+        { country: 'Italy', code: 'ITA', value: 2255000000000, flag: '🇮🇹' },
+        { country: 'Brazil', code: 'BRA', value: 2173000000000, flag: '🇧🇷' },
+        { country: 'Canada', code: 'CAN', value: 2117000000000, flag: '🇨🇦' },
       ];
     }
+  }
+
+  private static getFlagEmoji(countryCode: string): string {
+    // Convert country code to flag emoji
+    const codePoints = countryCode
+      .toUpperCase()
+      .split('')
+      .map(char => 127397 + char.charCodeAt(0));
+    return String.fromCodePoint(...codePoints);
   }
 
   static async fetchTopLanguages(): Promise<LanguageData[]> {

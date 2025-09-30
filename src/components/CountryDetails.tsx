@@ -82,20 +82,22 @@ const CountryDetails: React.FC<CountryDetailsProps> = ({ country }) => {
   const currencies = country.currencies ? Object.values(country.currencies) : [];
 
   return (
-    <div className="w-full md:w-96 bg-background border-l border-border overflow-y-auto">
+    <div className="w-full md:w-96 bg-gradient-subtle border-l border-border overflow-y-auto">
       <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center gap-3">
-            <div className="text-4xl">{country.flag}</div>
-            <div className="text-center">
-              <h1 className="text-2xl font-bold">{country.name.common}</h1>
-              <p className="text-muted-foreground text-sm">{country.name.official}</p>
-            </div>
+        {/* Header with Flag on Top */}
+        <div className="text-center space-y-3">
+          <div className="inline-block p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 shadow-soft">
+            <div className="text-7xl leading-none">{country.flag}</div>
           </div>
-          <Badge variant="secondary" className="mt-2">
-            {country.cca3}
-          </Badge>
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              {country.name.common}
+            </h1>
+            <p className="text-muted-foreground text-sm">{country.name.official}</p>
+            <Badge variant="secondary" className="mt-2">
+              {country.cca3}
+            </Badge>
+          </div>
         </div>
 
         <Separator />
