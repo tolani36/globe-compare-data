@@ -86,8 +86,13 @@ const CountryDetails: React.FC<CountryDetailsProps> = ({ country }) => {
       <div className="p-6 space-y-6">
         {/* Header with Flag on Top */}
         <div className="text-center space-y-3">
-          <div className="inline-block p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 shadow-soft">
-            <div className="text-7xl leading-none">{country.flag}</div>
+          <div className="inline-block p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 shadow-soft overflow-hidden">
+            <img 
+              src={`https://flagcdn.com/w320/${country.cca3.toLowerCase()}.png`}
+              alt={`Flag of ${country.name.common}`}
+              className="w-32 h-24 object-cover rounded-lg"
+              loading="lazy"
+            />
           </div>
           <div className="space-y-1">
             <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">

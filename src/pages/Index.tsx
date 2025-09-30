@@ -182,10 +182,10 @@ const Index = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="analytics" className="flex-1 overflow-hidden mt-0 pt-4">
+          <TabsContent value="analytics" className="flex-1 overflow-hidden mt-0">
             <div className="h-full overflow-y-auto bg-gradient-subtle">
-              <div className="container mx-auto px-6 py-6 max-w-7xl space-y-6">
-                <div className="space-y-1">
+              <div className="container mx-auto px-6 py-8 max-w-7xl">
+                <div className="space-y-1 mb-8">
                   <h2 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                     Global Analytics Dashboard
                   </h2>
@@ -194,8 +194,14 @@ const Index = () => {
                   </p>
                 </div>
                 
-                <RankingsList />
-                <DataVisualizations />
+                <div className="flex flex-col lg:flex-row gap-6">
+                  <div className="lg:w-1/3">
+                    <RankingsList />
+                  </div>
+                  <div className="lg:w-2/3">
+                    <DataVisualizations />
+                  </div>
+                </div>
               </div>
             </div>
           </TabsContent>
